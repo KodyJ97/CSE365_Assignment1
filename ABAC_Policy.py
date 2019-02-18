@@ -43,10 +43,74 @@ class CommandLine:
 				else:
 					print("Unkown Entry: " + parts[1].strip())
 			t.close()
-			# returs list
-
 		except FileNotFoundError:
 			print("") # Dont return anything if file is not found
+
+	# Helper function to parse the attributes and returns role of names, objects, and enviroments.
+	def fetchRole(self, attributeMatch):
+		compare = ("<" + attributeMatch + ">")
+		print("COMPARE: " + compare)
+		aa = self.policyFetch("AA")
+		print("AA: " + aa)
+		# Split ':' for individual attributes.
+		attributeList = aa.split(';')
+		print("Attributes: " + str(attributeList))
+		#for attributes in attributeList:
+		test = len(attributeList)
+		for x in range(test):
+			attributeSplit = str(attributeList[x]).split(':')
+			#print("AttributeTest: " + str(attributeSplit))
+			print("AttributeTest[0]: " + str(attributeSplit[0]))
+			print("AttributeTest[1]: " + str(attributeSplit[1]))
+			print("compare:" + compare + attributeSplit[0])
+			if attributeSplit[0].strip() == compare.strip():
+				attributeSplitMore = attributeSplit[1].split(',')
+				print("ATTSPLITMORE: " + attributeSplitMore[0].strip())
+				print("ATTSPLITMORE: " + attributeSplitMore[1].strip('>'))
+				return attributeSplitMore[1].strip('>')
+			else:
+				return False
+			#if
+		#return aa
+
+
+
+	def test(self):
+		# Best solved with somewhat complex boolean
+		userCheck = False
+		objectCheck = False
+		enviromentCheck = False
+		permissionCheck = False
+		assignmentsArr = ""
+		paEntries = self.policyFetch("PA")
+		parsedPA = paEntries.split("-")
+		for string in parsedPA:
+			print("Assignemnt Entry: " + string)
+			assignmentsArr += str(string.split("-"))
+			print("STRING: " + str(string))
+			file_parts = string.split(":")
+			print("File Parts: " + str(file_parts))
+			attributesLine = file_parts[0].strip()
+			permissionName = file_parts[1].strip()				
+			print("Attributes: " + str(attributesLine))
+			print("Permission: " + str(permissionName))	
+			# Check permission first
+			if permissionName == permissionNamet:
+				permissionCheck = True	
+			attributes = attributesLine.split(";")
+			for attribute in attributes:
+				attribute = attribute.strip()
+				attribute = attribute[1:len(attribute)-1]
+				attributeParts = attribute.split(",")		
+				name = attributeParts[0].strip()
+				value = attributeParts[1].strip()
+				print("Attribute name: " + name)
+				print("Attribute value: " + value)
+			print("--------------------------------------------------")
+		if userCheck == True: # objectCheck == true: ADD
+			return True
+		else:
+			return False
 
 	# DONE - Parser for attributes and permissions.
 	def textParser(self, read_data):
@@ -87,7 +151,8 @@ class CommandLine:
 					perms = parts[1].strip()
 				elif parts[0].strip() == 'PA':
 					print("PA: " + parts[1].strip())
-					self.textParser(parts[1])
+					pa = parts[1].strip()
+					self.textParser(parts[1]) # -> remove eventually
 				elif parts[0].strip() == 'ENTITIES':
 					print("ENTITIES: " + parts[1].strip())
 					entities = parts[1].strip()
@@ -110,10 +175,40 @@ class CommandLine:
 		except FileNotFoundError:
 			print("") # Dont return anything if file has not been loaded
 		
-	# WORK - Function that checks the permission of a user.
-	def checkPermission(self, userName, objectName, enviromentName, permissionName):
-		print("Username: " + userName + " Objectname: " + objectName + " Enviromentname: " + enviromentName + " PermissionName: " + permissionName)
-		# Work HERE
+	# WORK - Function that checks the permission of a user. - COMPLEX BOOLEAN.
+	def checkPermission(self, userName, objectName, enviromentName, permissionNamet):
+		# Best solved with somewhat complex boolean
+		userCheck = False
+		objectCheck = False
+		enviromentCheck = False
+		permissionCheck = False
+		print("Username: " + userName + " Objectname: " + objectName + " Enviromentname: " + enviromentName + " PermissionName: " + permissionNamet)
+		assignmentsArr = ""
+		paEntries = self.policyFetch("PA")
+		parsedPA = paEntries.split("-")
+		for string in parsedPA:
+			print("Assignemnt Entry: " + string)
+			assignmentsArr += str(string.split("-"))
+			print("STRING: " + str(string))
+			file_parts = string.split(":")
+			print("File Parts: " + str(file_parts))
+			attributesLine = file_parts[0].strip()
+			permissionName = file_parts[1].strip()				
+			print("Attributes: " + str(attributesLine))
+			print("Permission: " + str(permissionName))	
+			# Check permission first
+			if permissionName == permissionNamet:
+				permissionCheck = True	
+			attributes = attributesLine.split(";")
+			for attribute in attributes:
+				attribute = attribute.strip()
+				attribute = attribute[1:len(attribute)-1]
+				attributeParts = attribute.split(",")		
+				name = attributeParts[0].strip()
+				value = attributeParts[1].strip()
+				print("Attribute name: " + name)
+				print("Attribute value: " + value)
+			print("--------------------------------------------------")
 		
 	# DONE - Function that adds an entity to ENTITIES.
 	def addEntity(self, entity):
@@ -172,10 +267,14 @@ class CommandLine:
 	def addAttribute(self, attName, attType):
 		print("Attribute Name: " + attName + " Attribute Type: " + attType)
 		print("TODO")
+		test = self.assignmentEntries()
+		print(test)
 	
 	def removeAttribute(self, attR):
 		print("Attribute to be removen: " + attR)
 		print("TODO")
+		test = self.fetchRole("Josie")
+		print(test)
 		
 	# DONE - Adds a permission to PERMS and checks if it already has been added.
 	def addPermission(self, perm):
@@ -206,58 +305,33 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 		
+	# DONE - Remove a permission from PERMS and delete all entries of the permission.
 	def removePermission(self, rperm):
 		print("Remove permission: " + rperm)
-		try:
-			o = open('policy.txt', 'r') # open for reading and writing.
-			line = o.readline()
-			check = False
-			while line:
-				parts = line.split("=")
-				line = o.readline()
-				if parts[0].strip() == 'ATTRS':
-					attrs = parts[1].strip()
-				elif parts[0].strip() == 'PERMS':
-					perms = parts[1].strip()
-					print("perms: " + perms)
-					permCompare = ("<" + rperm + ">")
-					permCompare = permCompare.upper()
-					permList = parts[1].split(';')
-					perms = ""
-					print("permComp: " + permCompare)
-					print("permList: " + str(permList))
-					for numPerm in permList:
-						print("numper: " + numPerm.strip())
-						if numPerm.strip() == permCompare.strip(): # logic works need to locate work around for spaces in lists
-							permRemove = str(permList)
-							print("permremove: " + permRemove.strip())
-							permList.remove(" " + permCompare)
-							check = True
-							print("Check: " + str(check))
-						else:
-							if permList[-1] == numPerm:
-								perms += (numPerm)
-								print("Perms after:" + perms)
-							else:
-								perms += (numPerm + ";")
-								print("Perms after:" + perms)							
-				elif parts[0].strip() == 'PA':
-					pa = parts[1].strip()
-				elif parts[0].strip() == 'ENTITIES':
-					entities = parts[1].strip()
-				elif parts[0].strip() == 'AA':
-					aa = parts[1].strip()				
-				else:
-					print("")
-			# Storage stuff
-			o.close()
-			if check == True:
-				r = open('policy.txt', 'w') # open for writing
-				newFile = ("ATTRS = " + attrs + "\nPERMS = " + perms + "\nPA = " + pa + "\nENTITIES = " + entities + "\nAA = " + aa)
-				r.write(newFile)
-				r.close()
-		except FileNotFoundError:
-			print("") # Dont return anything if policy has not been loaded.
+		check = False
+		newPermissions = ""
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("myPermissions: " + str(myPermissions))
+		permissionList = str(myPermissions).split(';')
+		print(str(permissionList))
+		permissionCompare = ("<" + rperm + ">")
+		print("perm comp: " + permissionCompare)
+		for permissions in permissionList:
+			if permissions.strip() == permissionCompare.strip():
+				print("Compare" + permissions.strip() + "to" + permissionCompare)
+				check = True
+			elif permissions != '':
+				newPermissions += (permissions + ";")
+				print("new Permissions: " + newPermissions)
+		if check == True:
+			r = open('policy.txt', 'w') # open for writing
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
 		
 	def addAttributesToPermission(self, permN, attN, attV):
 		print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
