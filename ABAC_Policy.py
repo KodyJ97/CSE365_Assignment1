@@ -5,10 +5,50 @@
 ' Description: Implement ABAC policy with command line interface.
 '''
 import sys, argparse
-
 class CommandLine:
 
-	# Parser function for our policy file.
+	# DONE - Help function for storing and retrieving data from the storage file.
+	def policyFetch(self, myChoice):
+		try:
+			attrs = ""
+			perms = ""
+			pa = ""
+			entities = ""
+			aa = ""
+			t = open('policy.txt', 'r')
+			line = t.readline()
+			while line:
+				parts = line.split("=")
+				line = t.readline()
+				if parts[0].strip() == 'ATTRS':
+					if myChoice == 'ATTRS':
+						attrs = parts[1].strip()
+						return attrs
+				elif parts[0].strip() == 'PERMS':
+					if myChoice == 'PERMS':
+						perms = parts[1].strip()
+						return perms
+				elif parts[0].strip() == 'PA':
+					if myChoice == 'PA':
+						pa = parts[1].strip()
+						return pa
+				elif parts[0].strip() == 'ENTITIES':
+					if myChoice == 'ENTITIES':
+						entities = parts[1].strip()
+						return entities
+				elif parts[0].strip() == 'AA':
+					if myChoice == 'AA':
+						aa = parts[1].strip()
+						return aa
+				else:
+					print("Unkown Entry: " + parts[1].strip())
+			t.close()
+			# returs list
+
+		except FileNotFoundError:
+			print("") # Dont return anything if file is not found
+
+	# DONE - Parser for attributes and permissions.
 	def textParser(self, read_data):
 		file_to_parse = read_data.split("-")
 		for string in file_to_parse:
@@ -29,7 +69,7 @@ class CommandLine:
 				print("Attribute value: " + value)
 			print("--------------------------------------------------")
 	
-	# Function to load the policy and create a storage file for it.
+	# DONE - Function to load the policy and create a storage file for it.
 	def loadPolicy(self, x):
 		try:
 			f = open(x, 'r')
@@ -61,7 +101,7 @@ class CommandLine:
 		except FileNotFoundError:
 			print("") # Dont return anything if file is not found
 		
-	# Function to print out the policy.
+	# DONE - Function to print out the policy.
 	def showPolicy(self):
 		try:
 			p = open('policy.txt', 'r')
@@ -70,54 +110,104 @@ class CommandLine:
 		except FileNotFoundError:
 			print("") # Dont return anything if file has not been loaded
 		
-	# Function that checks the permission of a user.
+	# WORK - Function that checks the permission of a user.
 	def checkPermission(self, userName, objectName, enviromentName, permissionName):
 		print("Username: " + userName + " Objectname: " + objectName + " Enviromentname: " + enviromentName + " PermissionName: " + permissionName)
 		# Work HERE
 		
-		
-		
-	# Function to add an entity to ENTITIES.
+	# DONE - Function that adds an entity to ENTITIES.
 	def addEntity(self, entity):
-		try:
-			o = open('policy.txt', 'r') # open for reading and writing.
-			line = o.readline()
-			check = True
-			while line:
-				parts = line.split("=")
-				line = o.readline()
-				if parts[0].strip() == 'ATTRS':
-					attrs = parts[1].strip()
-				elif parts[0].strip() == 'PERMS':
-					perms = parts[1].strip()
-				elif parts[0].strip() == 'PA':
-					pa = parts[1].strip()
-				elif parts[0].strip() == 'ENTITIES':
-					print("ENTITIES: " + parts[1].strip())
-					entities = parts[1].strip()
-					entityCheck = parts[1].split(";")
-					entityCompare = ("<" + entity + ">")
-					print("Enitity Compare : " + entityCompare)
-					# Checking to make sure entity is not already inside.
-					for entitiesIn in entityCheck:
-						if entitiesIn == entityCompare:
-							check = False
-					print("Entity Check: " + str(entityCheck))
-				elif parts[0].strip() == 'AA':
-					aa = parts[1].strip()				
-				else:
-					print("")
-			# Storage stuff
-			o.close()
-			if check == True:
-				r = open('policy.txt', 'w') # open for writing
-				newFile = ("ATTRS = " + attrs + "\nPERMS = " + perms + "\nPA = " + pa + "\nENTITIES = " + entities + "<" + entity + ">;\nAA = " + aa)
-				r.write(newFile)
-				r.close()
-		except FileNotFoundError:
-			print(" ") # Dont return anything if policy has not been loaded.
-		
+		check = True
+		newEntries = ""
+		myEntities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		perms= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("myEntities: " + str(myEntities))
+		entityList = str(myEntities).split(';')
+		print(str(entityList))
+		for entries in entityList:
+			if entries == entity:
+				check = False
+			elif entries != '':
+				newEntries += (entries + ";")
+		if check == True:
+			newEntries += ("<" + entity + ">;")
+			r = open('policy.txt', 'w') # open for writing
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(newEntries) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+	
+	# DONE - Function that deletes an entity from ENTITIES. Also deletes all appearances of that entity.
 	def removeEntity(self, entityR):
+		check = False
+		newEntries = ""
+		myEntities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		perms= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("myEntities: " + str(myEntities))
+		entityList = str(myEntities).split(';')
+		print(str(entityList))
+		entityRemove = ("<" + entityR + ">")
+		print("entityRemove: " + entityRemove)
+		for entries in entityList:
+			if entries == entityRemove:
+				print("Compare" + entries + "to" + entityRemove)
+				check = True
+				print("CHECK: " + str(check))
+			elif entries != '':
+				print("New entry added: " + entries)
+				newEntries += (entries + ";")
+			print("NEWENTRIES: " + str(newEntries))
+		print("entityList: " + str(entityList))
+		if check == True:
+			r = open('policy.txt', 'w') # open for writing
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(newEntries) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+			
+	def addAttribute(self, attName, attType):
+		print("Attribute Name: " + attName + " Attribute Type: " + attType)
+		print("TODO")
+	
+	def removeAttribute(self, attR):
+		print("Attribute to be removen: " + attR)
+		print("TODO")
+		
+	# DONE - Adds a permission to PERMS and checks if it already has been added.
+	def addPermission(self, perm):
+		print("Add permission: " + perm)
+		check = True
+		newPermissions = ""
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("myPermissions: " + str(myPermissions))
+		permissionList = str(myPermissions).split(';')
+		print(str(permissionList))
+		permissionCompare = ("<" + perm + ">")
+		print("perm comp: " + permissionCompare)
+		for permissions in permissionList:
+			if permissions.strip() == permissionCompare.strip():
+				print("Compare" + permissions.strip() + "to" + permissionCompare)
+				check = False
+			elif permissions != '':
+				newPermissions += (permissions + ";")
+				print("new Permissions: " + newPermissions)
+		if check == True:
+			newPermissions += (" <" + perm + ">;")
+			r = open('policy.txt', 'w') # open for writing
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+		
+	def removePermission(self, rperm):
+		print("Remove permission: " + rperm)
 		try:
 			o = open('policy.txt', 'r') # open for reading and writing.
 			line = o.readline()
@@ -129,26 +219,32 @@ class CommandLine:
 					attrs = parts[1].strip()
 				elif parts[0].strip() == 'PERMS':
 					perms = parts[1].strip()
+					print("perms: " + perms)
+					permCompare = ("<" + rperm + ">")
+					permCompare = permCompare.upper()
+					permList = parts[1].split(';')
+					perms = ""
+					print("permComp: " + permCompare)
+					print("permList: " + str(permList))
+					for numPerm in permList:
+						print("numper: " + numPerm.strip())
+						if numPerm.strip() == permCompare.strip(): # logic works need to locate work around for spaces in lists
+							permRemove = str(permList)
+							print("permremove: " + permRemove.strip())
+							permList.remove(" " + permCompare)
+							check = True
+							print("Check: " + str(check))
+						else:
+							if permList[-1] == numPerm:
+								perms += (numPerm)
+								print("Perms after:" + perms)
+							else:
+								perms += (numPerm + ";")
+								print("Perms after:" + perms)							
 				elif parts[0].strip() == 'PA':
 					pa = parts[1].strip()
 				elif parts[0].strip() == 'ENTITIES':
-					print("ENTITIES: " + parts[1].strip())
 					entities = parts[1].strip()
-					entityCheck = parts[1].split(";")
-					entityCompare = ("<" + entityR + ">")
-					print("Enitity Compare : " + entityCompare)
-					# Checking to make sure entity is not already inside.
-					for entitiesIn in entityCheck:
-						if entitiesIn == entityCompare: # NEEDS Work leave as b if no solution is found
-							check = True
-							print("EntitiesIn: " + str(entitiesIn) + "entityCheck" + str(entityCheck))
-							print("Entities: " + entities)
-							removeL = ("<" + entityR + ">")
-							print("REMOVE: " + removeL)
-							entityCheck.remove(removeL)
-							print("EntitiesIn: " + str(entitiesIn) + "After entityCheck" + str(entityCheck))
-							entities = str(entityCheck) # -. casting a list to string gives dif format
-							print("Entities after: " + entities)
 				elif parts[0].strip() == 'AA':
 					aa = parts[1].strip()				
 				else:
@@ -161,22 +257,7 @@ class CommandLine:
 				r.write(newFile)
 				r.close()
 		except FileNotFoundError:
-			print(" ") # Dont return anything if policy has not been loaded.
-		print("TODO")
-
-	def addAttribute(self, attName, attType):
-		print("Attribute Name: " + attName + " Attribute Type: " + attType)
-		print("TODO")
-	
-	def removeAttribute(self, attR):
-		print("Attribute to be removen: " + attR)
-		print("TODO")
-		
-	def addPermission(self, perm):
-		print("Add permission: " + perm)
-		
-	def removePermission(self, rperm):
-		print("Remove permission: " + rperm)
+			print("") # Dont return anything if policy has not been loaded.
 		
 	def addAttributesToPermission(self, permN, attN, attV):
 		print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
