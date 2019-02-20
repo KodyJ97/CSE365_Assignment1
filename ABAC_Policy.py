@@ -261,7 +261,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 		
-	# WORK - Function that adds attributes to ATTRS. Also ensures that if it already in there it doesnt repeat.	
+	# DONE - Function that adds an attributes to ATTRS. Also ensures that if it already in there it doesnt repeat.	
 	def addAttribute(self, attName, attType):
 		print("Attribute Name: " + attName + " Attribute Type: " + attType)
 		print("TODO")
@@ -284,24 +284,51 @@ class CommandLine:
 			namePrint = namePrint.strip('<')
 			typePrint = typePrint.strip('>')
 			print("aName: " + namePrint + " aType: " + typePrint)
-			if namePrint == attName and typePrint == attType:
-				# Catch condition here
-		'''
+			if namePrint.strip() == attName.strip() and typePrint.strip() == attType.strip():
+				check = False
 		if check == True:
-			newAttributes += ("<" + attName.strip() + ", " + attType.strip() + ">;")
-			r = open('policy.txt', 'w') # open for writing
+			attrs += (" ;<" + attName.strip() + ", " + attType.strip() + ">")
+			r = open('policy.txt', 'w')
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+		# - TESTING HELPER FUNCTION
+		#test = self.assignmentEntries()
+		#print(test)
+	
+	# WORK - Function tat removes attributes from ATTRS and removes all PAs related to te attribute.
+	def removeAttribute(self, attR):
+		print("Attribute to be removen: " + attR)
+		print("TODO")
+		check = True
+		newAttributes = ""
+		myEntities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		perms= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("my attributes: " + str(attrs))
+		attributeList = str(attrs).split(';')
+		print(str(attributeList))
+		for attributes in attributeList:
+			aSplit = str(attributes).split(',')
+			aName = aSplit[0]
+			aType = aSplit[1]
+			namePrint = aName.strip()
+			typePrint = aType.strip()
+			namePrint = namePrint.strip('<')
+			typePrint = typePrint.strip('>')
+			print("aName: " + namePrint + " aType: " + typePrint)
+			if namePrint.strip() == attName.strip() and typePrint.strip() == attType.strip():
+				check = False
+		if check == True:
+			attrs += (" ;<" + attName.strip() + ", " + attType.strip() + ">")
+			r = open('policy.txt', 'w')
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 		
-		# - TESTING HELPER FUNCTION
-		test = self.assignmentEntries()
-		print(test)
-		'''
-	
-	def removeAttribute(self, attR):
-		print("Attribute to be removen: " + attR)
-		print("TODO")
+		# Testin elper function b4
 		test = self.fetchRole("Josie")
 		print(test)
 		
