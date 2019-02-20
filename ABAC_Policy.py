@@ -1,7 +1,7 @@
 '''
 ' Kody Johnson (1209950115)
 ' ASU CSE 365 - Information Assurance
-' Last date modified - 2/16/2019
+' Last date modified - 2/17/2019
 ' Description: Implement ABAC policy with command line interface.
 '''
 import sys, argparse
@@ -70,10 +70,6 @@ class CommandLine:
 				return attributeSplitMore[1].strip('>')
 			else:
 				return False
-			#if
-		#return aa
-
-
 
 	def test(self):
 		# Best solved with somewhat complex boolean
@@ -154,7 +150,7 @@ class CommandLine:
 					pa = parts[1].strip()
 					self.textParser(parts[1]) # -> remove eventually
 				elif parts[0].strip() == 'ENTITIES':
-					print("ENTITIES: " + parts[1].strip())
+					print("ENTITIES: " + parts[1].strip()) # also remove these lul
 					entities = parts[1].strip()
 				elif parts[0].strip() == 'AA':
 					print("AA: " + parts[1].strip())
@@ -209,6 +205,7 @@ class CommandLine:
 				print("Attribute name: " + name)
 				print("Attribute value: " + value)
 			print("--------------------------------------------------")
+		#if boolean spot if true and false
 		
 	# DONE - Function that adds an entity to ENTITIES.
 	def addEntity(self, entity):
@@ -234,7 +231,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 	
-	# DONE - Function that deletes an entity from ENTITIES. Also deletes all appearances of that entity.
+	# DONE - Function that deletes an entity from ENTITIES.
 	def removeEntity(self, entityR):
 		check = False
 		newEntries = ""
@@ -259,16 +256,48 @@ class CommandLine:
 			print("NEWENTRIES: " + str(newEntries))
 		print("entityList: " + str(entityList))
 		if check == True:
-			r = open('policy.txt', 'w') # open for writing
+			r = open('policy.txt', 'w')
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(newEntries) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
-			
+		
+	# WORK - Function that adds attributes to ATTRS. Also ensures that if it already in there it doesnt repeat.	
 	def addAttribute(self, attName, attType):
 		print("Attribute Name: " + attName + " Attribute Type: " + attType)
 		print("TODO")
+		check = True
+		newAttributes = ""
+		myEntities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		perms= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		print("my attributes: " + str(attrs))
+		attributeList = str(attrs).split(';')
+		print(str(attributeList))
+		for attributes in attributeList:
+			aSplit = str(attributes).split(',')
+			aName = aSplit[0]
+			aType = aSplit[1]
+			namePrint = aName.strip()
+			typePrint = aType.strip()
+			namePrint = namePrint.strip('<')
+			typePrint = typePrint.strip('>')
+			print("aName: " + namePrint + " aType: " + typePrint)
+			if namePrint == attName and typePrint == attType:
+				# Catch condition here
+		'''
+		if check == True:
+			newAttributes += ("<" + attName.strip() + ", " + attType.strip() + ">;")
+			r = open('policy.txt', 'w') # open for writing
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+		
+		# - TESTING HELPER FUNCTION
 		test = self.assignmentEntries()
 		print(test)
+		'''
 	
 	def removeAttribute(self, attR):
 		print("Attribute to be removen: " + attR)
@@ -300,16 +329,17 @@ class CommandLine:
 				print("new Permissions: " + newPermissions)
 		if check == True:
 			newPermissions += (" <" + perm + ">;")
-			r = open('policy.txt', 'w') # open for writing
+			r = open('policy.txt', 'w')
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 		
-	# DONE - Remove a permission from PERMS and delete all entries of the permission.
+	# DONE - Remove a permission from PERMS and delete all entries of the permission from PA.
 	def removePermission(self, rperm):
 		print("Remove permission: " + rperm)
 		check = False
 		newPermissions = ""
+		newPA = ""
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
@@ -328,8 +358,23 @@ class CommandLine:
 				newPermissions += (permissions + ";")
 				print("new Permissions: " + newPermissions)
 		if check == True:
-			r = open('policy.txt', 'w') # open for writing
-			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r = open('policy.txt', 'w')
+			print("My PA's: " + str(pa))
+			paList = str(pa).split('-')
+			print("paList: " + str(paList))
+			for paNumber in paList:
+				print(paNumber)
+				split = str(paNumber).split(':')
+				print("Current PA: " + str(paNumber))
+				print("PERM: " + split[1])
+				if split[1].strip() != rperm.strip():
+					if paNumber == paList[-1]:
+						newPA += paNumber
+					else:
+						print(split[1].strip() + "to" + rperm.strip())
+						newPA += (paNumber + " - ")
+						print("check true")
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 		
@@ -355,13 +400,15 @@ class CommandLine:
 	# add-attributes-to-permission,
 	# remove-attribute-from-permission, add-attribute-to-entity, and 
 	# remove-attribute-from-entity.
+	
 if __name__ == '__main__':
+	
 	# Create a parser for the CommandLine interface and create a subparser
 	# set to destination command for storing user input.
 	parser = argparse.ArgumentParser(description='Command line Interface Parser')
 	subparser = parser.add_subparsers(dest='command')
 	# Subparsers for our main parser. Note that all all parser have a default
-	# TYPE=STR EVERYTHING BELOW IS DONE FOCUS ON FUNCTIONS
+	# TYPE=STR EVERYTHING BELOW IS DONE.
 
 	# load-policy - done
 	parser_lp = subparser.add_parser('load-policy', help='Parses a text file')
@@ -375,31 +422,31 @@ if __name__ == '__main__':
 	# add-entity - done
 	parser_ae = subparser.add_parser('add-entity', help='Add entity to loaded policy')
 	
-	# remove-entity - somewhat done
+	# remove-entity - done
 	parser_re = subparser.add_parser('remove-entity', help='Remove entity to loaded policy')
 	
-	# add-attribute
+	# add-attribute - done
 	parser_aa = subparser.add_parser('add-attribute', help='Add attribute to loaded policy')
 	
-	# remove-attribute
+	# remove-attribute - done
 	parser_ra = subparser.add_parser('remove-attribute', help='Remove attribute from loaded policy')
 	
-	# add-permission
+	# add-permission - done
 	parser_ap = subparser.add_parser('add-permission', help='Add permission to loaded policy')
 	
-	# remove-permission
+	# remove-permission - done
 	parser_rp = subparser.add_parser('remove-permission', help='Remove permission from loaded policy')
 	
-	# add-attributes-to-permission
+	# add-attributes-to-permission - done
 	parser_aatp = subparser.add_parser('add-attributes-to-permission', help='Add attribute to permission')
 	
-	# remove-attribute-from-permission
+	# remove-attribute-from-permission - done
 	parser_rafp = subparser.add_parser('remove-attribute-from-permission', help='Removes attribute from permission')
 	
-	# add-attribute-to-entity
+	# add-attribute-to-entity - done
 	parser_aate = subparser.add_parser('add-attribute-to-entity', help='Add attribute to entity ')
 	
-	# remove-attriute-from-entity
+	# remove-attriute-from-entity - done
 	parser_rafe = subparser.add_parser('remove-attribute-from-entity', help='Remove attribute from entity')
 	
 	# Subcommands for all subparsers - Arguments are handled here via subparsers.
@@ -483,4 +530,4 @@ if __name__ == '__main__':
 	elif args.command == 'remove-attribute-from-entity':
 		commander.removeAttributeFromEntity(args.entityN[0], args.attributeN[0], args.attributeV[0])
 	else:
-		sys.exit(0)
+		sys.exit(0) # Any system error is defaulted to system exit. Otherwise the command entered was not properly labeled.
