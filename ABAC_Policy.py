@@ -308,7 +308,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 		
-	# DONE - Remove a permission from PERMS and delete all entries of the permission from PA.
+	# DONE? - Remove a permission from PERMS and delete all entries of the permission from PA.
 	def removePermission(self, rperm):
 		check = False
 		newPermissions = ""
@@ -324,14 +324,17 @@ class CommandLine:
 			if permissions.strip() == permissionCompare.strip():
 				check = True
 			elif permissions != '':
-				# catch in betweeen
 				if permissions == permissionList[-1]:
 					newPermissions += (permissions)
-				# catch 2nd to last
-				elif permissionCompare.strip() == permissionList[-1].strip() and permissions.strip() == permissionList[-2].strip():
-					newPermissions += (permissions)
 				else:
-					newPermissions += (permissions + ";")
+				# catch in betweeen
+					if permissions == permissionList[-1]:
+						newPermissions += (permissions)
+					# catch 2nd to last
+					elif permissionCompare.strip() == permissionList[-1].strip() and permissions.strip() == permissionList[-2].strip():
+						newPermissions += (permissions)
+					else:
+						newPermissions += (permissions + ";")
 		if check == True:
 			r = open('policy.txt', 'w')
 			paList = str(pa).split('-')
@@ -364,26 +367,85 @@ class CommandLine:
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		permissionList = str(myPermissions).split(';')
+		permissionCompare = ("<" + perm + ">")
+		for permissions in permissionList:
+			if permissions.strip() == permissionCompare.strip():
+				check = False
+			elif permissions != '':
+				newPermissions += (permissions + ";")
+		if check == True:
+			newPermissions += (" <" + perm + ">")
+			r = open('policy.txt', 'w')
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
 		
+	# DONE - Adds attributes to entites in AA. Checks to make sure entity exists and attribute value also exists.
 	def addAttributeToEntity(self, entN, attN, attV):
-		#print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		#print("TODO AATE")
+		attributeCheck = False
+		entityCheck = False
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
-		
-		
-		
+		# Check that attribute is in ATTRS.
+		attributeList = str(attrs).split(';')
+		for attributes in attributeList:
+			aSplit = str(attributes).split(',')
+			aType = aSplit[0]
+			aName = aSplit[1]
+			namePrint = aName.strip()
+			typePrint = aType.strip()
+			namePrint = namePrint.strip('>')
+			typePrint = typePrint.strip('<')
+			if namePrint.strip() == attN.strip():
+				attributeCheck = True
+		# Check that entity is in ENTITIES.
+		entityCompare = ("<" + entN + ">")
+		entityList = str(entities).split(';')
+		for entries in entityList:
+			if entries.strip() == entityCompare.strip():
+				entityCheck = True
+		# add new attribute to entity if all checks out.
+		if attributeCheck == True and entityCheck == True:	
+			# new attribute to be added to entity
+			newAttributeA = ("; " + entityCompare + " : <" + attN + ", " + attV + ">")
+			aa += (newAttributeA)		
+			r = open('policy.txt', 'w')
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+
+	# DONE? - Removes the assignment of an attribute to designated entity. Modifies AA. ERROR when last AA is removed we have ';' at the end creates parse error.
 	def removeAttributeFromEntity(self, entN, attN, attV):
-		#print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		#print("TODO RAFE")
+		removeCheck = False
+		newAA = ""
+		comp1 = ("<" + entN +"> : <" + attN + ", " + attV + ">")
+		comp2 = ("<" + entN +"> : <" + attN + ', "'  + attV + '">')
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		aaList = str(aa).split(';')
+		for attA in aaList:
+			aaParts = attA.split(':')
+			if attA.strip() == comp1.strip() or attA.strip() == comp2.strip():
+				removeCheck = True
+			elif attA == aaList[-1]:
+								newAA += (attA)
+			else:
+				newAA += (attA + "; ")
+			print(attA.strip())
+			print(comp1.strip())
+			print(comp2.strip())
+		if removeCheck == True:		
+			r = open('policy.txt', 'w')
+			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(newAA))
+			r.write(newFile)
+			r.close()
 		
 	# Creating argument parsers for the commandline interface
 	# load-policy, show-policy, check-permission, add-entity, remove-entity,
