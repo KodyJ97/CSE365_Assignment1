@@ -196,8 +196,16 @@ class CommandLine:
 		perms= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		# Fix for our bug we found just substring off the last char in case it ';'.
+		attrs = attrs[0:len(attrs)-1]
+		print("ATTRS: " + attrs)
 		attributeList = str(attrs).split(';')
 		for attributes in attributeList:
+			# TEST
+			#attributes = attributes.strip()
+			#attributes = attributes[1:len(attributes)-1] SUBSTRING FIX
+			#print("ATTRIBUTES: " + attributes)
+			# TEST
 			aSplit = str(attributes).split(',')
 			aType = aSplit[0]
 			aName = aSplit[1]
@@ -205,10 +213,13 @@ class CommandLine:
 			typePrint = aType.strip()
 			namePrint = namePrint.strip('>')
 			typePrint = typePrint.strip('<')
+			print(namePrint.strip() + attName.strip() + typePrint.strip() + attType.strip())
 			if namePrint.strip() == attName.strip() and typePrint.strip() == attType.strip():
 				check = False
+			elif attributes.strip() == attributeList[-1].strip():
+				newAttributes += (aType.strip() + ", " + aName.strip() + ">; ")
 			else:
-				newAttributes += (aType.strip() + " ," + aName.strip() + "; ")
+				newAttributes += (aType.strip() + ", " + aName.strip() + "; ")
 		if check == True:
 			newAttributes += ("<" + attType.strip() + ", " + attName.strip() + ">")
 			r = open('policy.txt', 'w')
@@ -216,7 +227,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 	
-	# Done? - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse doesnt mess up later. ERROR out of time to fix.
+	# Doneish fixed ; error - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse will error.
 	def removeAttribute(self, attR):
 		check = False
 		newAttributes = ""
@@ -226,6 +237,9 @@ class CommandLine:
 		perms= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		# Fix for our bug we found just substring off the last char in case it is a char -> ';'. - TESTING HERE.
+		attrs = attrs[0:len(attrs)-1]
+		print("ATTRS: " + attrs)
 		attributeList = str(attrs).split(';')
 		for attributes in attributeList:
 			aSplit = str(attributes).split(',')
@@ -236,12 +250,14 @@ class CommandLine:
 			namePrint = namePrint.strip('>')
 			typePrint = typePrint.strip('<')
 			if namePrint.strip() != attR.strip():
+				'''
 				if attributes == attributeList[-1]:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
 				elif attributeList[-2].strip() == attributes.strip() and attributeList[-1].strip() == attR.strip():
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
 				else:
-					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">; ")
+				'''
+				newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">; ")
 			elif namePrint.strip() == attR.strip():
 				check == True
 				#print(attR + namePrint)
@@ -308,7 +324,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 		
-	# DONE? - Remove a permission from PERMS and delete all entries of the permission from PA.
+	# DONE? - Remove a permission from PERMS and delete all entries of the permission from PA. INDEX ERROR for echking last char of string - unknown how this is happening
 	def removePermission(self, rperm):
 		check = False
 		newPermissions = ""
@@ -345,6 +361,10 @@ class CommandLine:
 						newPA += paNumber
 					else:
 						newPA += (paNumber + "-")
+			# Fix for our bug we found just substring off the last char in case it ';'. Error index out of range somehow? - TEST
+			if newPA[-1] == "-":
+				newPA = newPA[0:len(newPA)-1]
+			print("newPA" + newPA)
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
@@ -391,6 +411,9 @@ class CommandLine:
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
 		# Check that attribute is in ATTRS.
+		# Fix for our bug we found just substring off the last char in case it is a char -> ';'.
+		temp = attrs
+		attrs = attrs[0:len(attrs)-1]
 		attributeList = str(attrs).split(';')
 		for attributes in attributeList:
 			aSplit = str(attributes).split(',')
@@ -411,14 +434,17 @@ class CommandLine:
 		# add new attribute to entity if all checks out.
 		if attributeCheck == True and entityCheck == True:	
 			# new attribute to be added to entity
-			newAttributeA = ("; " + entityCompare + " : <" + attN + ", " + attV + ">")
+			if aa[-1] == ";":
+				newAttributeA = (" " + entityCompare + " : <" + attN + ", " + attV + ">;")
+			else:
+				newAttributeA = ("; " + entityCompare + " : <" + attN + ", " + attV + ">")
 			aa += (newAttributeA)		
 			r = open('policy.txt', 'w')
-			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			newFile = ("ATTRS = " + str(temp) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 
-	# DONE? - Removes the assignment of an attribute to designated entity. Modifies AA. ERROR when last AA is removed we have ';' at the end creates parse error.
+	# DONE - Removes the assignment of an attribute to designated entity. Modifies AA.
 	def removeAttributeFromEntity(self, entN, attN, attV):
 		removeCheck = False
 		newAA = ""
@@ -429,15 +455,22 @@ class CommandLine:
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		# Fix for our bug we found just substring off the last char in case it is a char -> ';'.
+		temp = aa
+		lastChar = aa[-1]
+		aa = aa[0:len(aa)-1]
+		print("AA test: " + aa)
 		aaList = str(aa).split(';')
 		for attA in aaList:
 			aaParts = attA.split(':')
 			if attA.strip() == comp1.strip() or attA.strip() == comp2.strip():
 				removeCheck = True
-			elif attA == aaList[-1]:
-								newAA += (attA)
+			elif attA == aaList[-1] and lastChar != ";":
+				newAA += (attA + ">")
+			elif attA == aaList[-1] and lastChar == ";":
+				newAA += (attA)
 			else:
-				newAA += (attA + "; ")
+				newAA += (attA + ";")
 			print(attA.strip())
 			print(comp1.strip())
 			print(comp2.strip())
