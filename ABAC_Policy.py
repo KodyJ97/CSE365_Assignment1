@@ -216,7 +216,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 	
-	# Done? - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse doesnt mess up later.
+	# Done? - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse doesnt mess up later. ERROR out of time to fix.
 	def removeAttribute(self, attR):
 		check = False
 		newAttributes = ""
@@ -238,35 +238,35 @@ class CommandLine:
 			if namePrint.strip() != attR.strip():
 				if attributes == attributeList[-1]:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
-				elif attributeList[-2] == attributes and attributeList[-1].strip() == attR.strip():
+				elif attributeList[-2].strip() == attributes.strip() and attributeList[-1].strip() == attR.strip():
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
 				else:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">; ")
 			elif namePrint.strip() == attR.strip():
 				check == True
-				print(attR + namePrint)
+				#print(attR + namePrint)
 				# pa holds all PA's rewrite afterwards.
 				# code for removin att from PAs
 				paList = pa.split('-')
 				for myPa in paList:
 					splitPA = myPa.split(':')
-					print("myPa: " + splitPA[0] + "splitPA PERM: " + splitPA[1])
+					#print("myPa: " + splitPA[0] + "splitPA PERM: " + splitPA[1])
 					splitEntries = splitPA[0].split(';')
-					print("splitENTRIES: " + str(splitEntries))
+					#print("splitENTRIES: " + str(splitEntries))
 					for attributes in splitEntries:
 						splitAttribute = attributes.split(',')
 						test = True
 						# Checking for attribute name here if in do not add back.
 						compareR = ("<" + attR)
 						if splitAttribute[0].strip() == compareR.strip():
-							print("Removing:" + splitAttribute[0] + "==" + compareR)
+							#print("Removing:" + splitAttribute[0] + "==" + compareR)
 							test = False
 						else:
 							if attributes == splitEntries[-1]:
 								newPA += (splitAttribute[0].strip() + ", " + splitAttribute[1].strip())
 							else:
 								newPA += (splitAttribute[0].strip() + ", " + splitAttribute[1].strip() + "; ")
-							print("NEWPA: " + newPA)
+							#print("NEWPA: " + newPA)
 							# if last attribute for a perm we delete the entire PA. ERROR here need to catch '-' at end. IDK
 					if len(splitEntries) >= 1 and test!= False:
 						if myPa == paList[-1]:
@@ -277,7 +277,7 @@ class CommandLine:
 							newPA += (" : " + splitPA[1].strip() + " - ")
 					else:
 						print("HI")
-				print("newPA" + newPA)
+				#print("newPA" + newPA)
 		
 		if check == False:
 			r = open('policy.txt', 'w')
@@ -347,20 +347,43 @@ class CommandLine:
 			r.close()
 		
 	def addAttributesToPermission(self, permN, attN, attV):
-		print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		print("TODO AATP")
+		#print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
+		#print("TODO AATP")
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		
 		
 	def removeAttributesFromPermission(self, permN, attN, attV):
-		print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		print("TODO RAFP")
+		#print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
+		#print("TODO RAFP")
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
 		
 	def addAttributeToEntity(self, entN, attN, attV):
-		print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		print("TODO AATE")
+		#print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
+		#print("TODO AATE")
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		
+		
 		
 	def removeAttributeFromEntity(self, entN, attN, attV):
-		print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		print("TODO RAFE")
+		#print("Entity Name:" + entN + " Attribute Name: " + attN + " Attribute Value: " + attV)
+		#print("TODO RAFE")
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
 		
 	# Creating argument parsers for the commandline interface
 	# load-policy, show-policy, check-permission, add-entity, remove-entity,
