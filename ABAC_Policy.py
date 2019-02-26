@@ -207,17 +207,17 @@ class CommandLine:
 			typePrint = typePrint.strip('<')
 			if namePrint.strip() == attName.strip() and typePrint.strip() == attType.strip():
 				check = False
+			else:
+				newAttributes += (aType.strip() + " ," + aName.strip() + "; ")
 		if check == True:
-			attrs += (";<" + attType.strip() + ", " + attName.strip() + ">")
+			newAttributes += ("<" + attType.strip() + ", " + attName.strip() + ">")
 			r = open('policy.txt', 'w')
-			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
+			newFile = ("ATTRS = " + str(newAttributes) + "\nPERMS = " + str(perms) + "\nPA = " + str(pa) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 	
 	# Done? - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse doesnt mess up later.
 	def removeAttribute(self, attR):
-		print("Attribute to be removen: " + attR)
-		print("TODO")
 		check = False
 		newAttributes = ""
 		newPA = ""
@@ -226,9 +226,7 @@ class CommandLine:
 		perms= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
-		print("my attributes: " + str(attrs))
 		attributeList = str(attrs).split(';')
-		print(str(attributeList))
 		for attributes in attributeList:
 			aSplit = str(attributes).split(',')
 			aType = aSplit[0]
@@ -237,12 +235,11 @@ class CommandLine:
 			typePrint = aType.strip()
 			namePrint = namePrint.strip('>')
 			typePrint = typePrint.strip('<')
-			print("aName: " + namePrint + " aType: " + typePrint)
-			print("aName: " + namePrint)
 			if namePrint.strip() != attR.strip():
 				if attributes == attributeList[-1]:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
-				#elif attributeList[-2] == attributes and 
+				elif attributeList[-2] == attributes and attributeList[-1].strip() == attR.strip():
+					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
 				else:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">; ")
 			elif namePrint.strip() == attR.strip():
@@ -251,7 +248,6 @@ class CommandLine:
 				# pa holds all PA's rewrite afterwards.
 				# code for removin att from PAs
 				paList = pa.split('-')
-				print("My paList: " + str(paList))
 				for myPa in paList:
 					splitPA = myPa.split(':')
 					print("myPa: " + splitPA[0] + "splitPA PERM: " + splitPA[1])
@@ -259,22 +255,24 @@ class CommandLine:
 					print("splitENTRIES: " + str(splitEntries))
 					for attributes in splitEntries:
 						splitAttribute = attributes.split(',')
-						print("Current Attribute: " + attributes + "Split Attribute: " + str(splitAttribute))
-						print("attribute name: " + splitAttribute[0] + " attribute value: " + splitAttribute[1])
+						test = True
 						# Checking for attribute name here if in do not add back.
 						compareR = ("<" + attR)
 						if splitAttribute[0].strip() == compareR.strip():
 							print("Removing:" + splitAttribute[0] + "==" + compareR)
+							test = False
 						else:
 							if attributes == splitEntries[-1]:
 								newPA += (splitAttribute[0].strip() + ", " + splitAttribute[1].strip())
 							else:
 								newPA += (splitAttribute[0].strip() + ", " + splitAttribute[1].strip() + "; ")
 							print("NEWPA: " + newPA)
-							# if last attribute for a perm we delete the entire PA. ERROR here need to catch '-' at end
-					if len(splitEntries) > 1:
+							# if last attribute for a perm we delete the entire PA. ERROR here need to catch '-' at end. IDK
+					if len(splitEntries) >= 1 and test!= False:
 						if myPa == paList[-1]:
 							newPA += (" : " + splitPA[1].strip())
+						#elif  != splitPA[1]:
+							#newPA += (" : " + splitPA[1].strip())
 						else:
 							newPA += (" : " + splitPA[1].strip() + " - ")
 					else:
@@ -286,7 +284,7 @@ class CommandLine:
 			newFile = ("ATTRS = " + str(newAttributes) + "\nPERMS = " + str(perms) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
-		
+
 	# DONE - Adds a permission to PERMS and checks if it already has been added.
 	def addPermission(self, perm):
 		check = True
