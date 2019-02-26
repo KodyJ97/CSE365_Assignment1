@@ -135,7 +135,7 @@ class CommandLine:
 						objectCheck = True
 					elif enviromentFetch.strip() == value.strip():
 						enviromentCheck = True
-		# Check that all Bool values are true in order to grant permission.
+		# Check that all Bool values are true in order to grant permission. Double check that all values must be true.
 		if permissionCheck == True and userCheck == True and objectCheck == True and enviromentCheck == True:
 			print("Permission GRANTED!")
 			return
@@ -227,7 +227,7 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 	
-	# Doneish fixed ; error - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' so parse will error.
+	# Doneish fixed ; error - Function that removes attributes from ATTRS and removes all PAs related to te attribute. ERROR with last entries being deleted need to catch the '-' or parse will error.
 	def removeAttribute(self, attR):
 		check = False
 		newAttributes = ""
@@ -251,11 +251,11 @@ class CommandLine:
 			typePrint = typePrint.strip('<')
 			if namePrint.strip() != attR.strip():
 				'''
-				if attributes == attributeList[-1]:
+				'if attributes == attributeList[-1]:
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
-				elif attributeList[-2].strip() == attributes.strip() and attributeList[-1].strip() == attR.strip():
+				'elif attributeList[-2].strip() == attributes.strip() and attributeList[-1].strip() == attR.strip():
 					newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">")
-				else:
+				'else:
 				'''
 				newAttributes += ("<" + typePrint.strip() + ", " + namePrint.strip() + ">; ")
 			elif namePrint.strip() == attR.strip():
@@ -369,19 +369,48 @@ class CommandLine:
 			r.write(newFile)
 			r.close()
 		
-	def addAttributesToPermission(self, permN, attN, attV):
-		#print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		#print("TODO AATP")
+	# NOT DONE - Fixed argparser to now properly take multiple arguments for this and only this function.
+	def addAttributesToPermission(self, permN, attN):
+		print("Permission name: " + permN + " Attribute Name: " + str(attN))
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		attributeCheck = False
+		entityCheck = False
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")
+		# Check that attribute is in ATTRS.
+		# Fix for our bug we found just substring off the last char in case it is a char -> ';'.
+		temp = attrs
+		attrs = attrs[0:len(attrs)-1]
+		attributeList = str(attrs).split(';')
+		for attributes in attributeList:
+			aSplit = str(attributes).split(',')
+			aType = aSplit[0]
+			aName = aSplit[1]
+			namePrint = aName.strip()
+			typePrint = aType.strip()
+			namePrint = namePrint.strip('>')
+			typePrint = typePrint.strip('<')
+			if namePrint.strip() == attN.strip(): # left off here
+				attributeCheck = True
+		# Check that entity is in ENTITIES.
+		entityCompare = ("<" + entN + ">")
+		entityList = str(entities).split(';')
+		for entries in entityList:
+			if entries.strip() == entityCompare.strip():
+				entityCheck = True
+		# add new attribute to entity if all checks out.
+		if attributeCheck == True and entityCheck == True:	
+			print("TRUE")
 		
-		
-	def removeAttributesFromPermission(self, permN, attN, attV):
-		#print("Permission name: " + permN + " Attribute Name: " + attN + " Attribute Value: " + attV)
-		#print("TODO RAFP")
+	# NOT DONE -
+	def removeAttributeFromPermission(self, permN, attN, attV):
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
@@ -564,10 +593,12 @@ if __name__ == '__main__':
 	par_rp = parser_rp.add_argument_group('Required Arguments')
 	parser_rp.add_argument('permissionR', nargs=1, metavar='permissionR')
 	
+	#add-attributes-to-permission has nargs='+' so it can take in multiple arguments that are stored in a list.
 	par_aatp = parser_aatp.add_argument_group('Required Arguments')
 	parser_aatp.add_argument('permissionN', nargs=1, metavar='permissionN')
-	parser_aatp.add_argument('attributeN', nargs=1, metavar='attributeN')
-	parser_aatp.add_argument('attributeV', nargs=1, metavar='attributeV')
+	parser_aatp.add_argument('attributeN', nargs='+', metavar='attributeN')
+	# This argument is not necessary.
+	#parser_aatp.add_argument('attributeV', nargs='+', metavar='attributeV')
 	
 	par_rafp = parser_rafp.add_argument_group('Required Arguemnts')
 	parser_rafp.add_argument('permissionN', nargs=1, metavar='permissionN')
@@ -608,9 +639,9 @@ if __name__ == '__main__':
 	elif args.command == 'remove-permission':
 		commander.removePermission(args.permissionR[0])
 	elif args.command == 'add-attributes-to-permission':
-		commander.addAttributesToPermission(args.permissionN[0], args.attributeN[0], args.attributeV[0])
+		commander.addAttributesToPermission(args.permissionN[0], args.attributeN)
 	elif args.command == 'remove-attribute-from-permission':
-		commander.removeAttributesFromPermission(args.permissionN[0], args.attributeN[0], args.attributeV[0])
+		commander.removeAttributeFromPermission(args.permissionN[0], args.attributeN[0], args.attributeV[0])
 	elif args.command == 'add-attribute-to-entity':
 		commander.addAttributeToEntity(args.entityN[0], args.attributeN[0], args.attributeV[0])
 	elif args.command == 'remove-attribute-from-entity':
