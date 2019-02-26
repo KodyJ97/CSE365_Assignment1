@@ -198,7 +198,6 @@ class CommandLine:
 		aa = self.policyFetch("AA")
 		# Fix for our bug we found just substring off the last char in case it ';'.
 		attrs = attrs[0:len(attrs)-1]
-		print("ATTRS: " + attrs)
 		attributeList = str(attrs).split(';')
 		for attributes in attributeList:
 			# TEST
@@ -239,7 +238,6 @@ class CommandLine:
 		aa = self.policyFetch("AA")
 		# Fix for our bug we found just substring off the last char in case it is a char -> ';'. - TESTING HERE.
 		attrs = attrs[0:len(attrs)-1]
-		print("ATTRS: " + attrs)
 		attributeList = str(attrs).split(';')
 		for attributes in attributeList:
 			aSplit = str(attributes).split(',')
@@ -291,10 +289,7 @@ class CommandLine:
 							#newPA += (" : " + splitPA[1].strip())
 						else:
 							newPA += (" : " + splitPA[1].strip() + " - ")
-					else:
-						print("HI")
 				#print("newPA" + newPA)
-		
 		if check == False:
 			r = open('policy.txt', 'w')
 			newFile = ("ATTRS = " + str(newAttributes) + "\nPERMS = " + str(perms) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(myEntities) + "\nAA = " + str(aa))
@@ -364,26 +359,78 @@ class CommandLine:
 			# Fix for our bug we found just substring off the last char in case it ';'. Error index out of range somehow? - TEST
 			if newPA[-1] == "-":
 				newPA = newPA[0:len(newPA)-1]
-			print("newPA" + newPA)
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
 			r.write(newFile)
 			r.close()
 		
-	# NOT DONE - Fixed argparser to now properly take multiple arguments for this and only this function.
+	# NOT DONE - Fixed argparser to now properly take multiple arguments for this and only this function. only takes 1 input not enough time to implement multiple.
 	def addAttributesToPermission(self, permN, attN):
-		print("Permission name: " + permN + " Attribute Name: " + str(attN))
+		x = 0
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
 		attributeCheck = False
-		entityCheck = False
+		permissionCheck = False
+		entities = self.policyFetch("ENTITIES")
+		attrs = self.policyFetch("ATTRS")
+		myPermissions= self.policyFetch("PERMS")
+		pa = self.policyFetch("PA")
+		aa = self.policyFetch("AA")	
+		#Check that the permission exists - working
+		permissionList = myPermissions.split(';')
+		for permissions in permissionList:
+			permComp = ("<" + permN + ">")
+			if permComp.strip() == permissions.strip():
+				permissionCheck = True
+				# Check that attribute is in ATTRS.
+		# Fix for our bug we found just substring off the last char in case it is a char -> ';'.
+		temp = attrs
+		attrs = attrs[0:len(attrs)-1]
+		attributeList = str(attrs).split(';')
+		if(len(attN)%2) == 0:
+			for attributes in attributeList:
+				aSplit = str(attributes).split(',')
+				aType = aSplit[0]
+				aName = aSplit[1]
+				namePrint = aName.strip()
+				typePrint = aType.strip()
+				namePrint = namePrint.strip('>')
+				typePrint = typePrint.strip('<')
+				# check that the attribute actually exists cycle through all attribute additions
+				if namePrint.strip() == attN[x].strip():
+					attributeCheck = True
+				else:
+					attributeCheck = False
+				# add new attribute to entity if all checks out.
+				if attributeCheck == True and permissionCheck == True:	
+					pa += (" - <" + attN[x] + ", " + attN[x+1] + "> : " + permN)
+		try:	
+			r = open('policy.txt', 'w')
+			newFile = ("ATTRS = " + str(temp) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+			r.write(newFile)
+			r.close()
+		except FileNotFoundError:
+			print("")
+		
+	# NOT DONE - Ran out of time to complete
+	def removeAttributeFromPermission(self, permN, attN, attV):
 		entities = self.policyFetch("ENTITIES")
 		attrs = self.policyFetch("ATTRS")
 		myPermissions= self.policyFetch("PERMS")
 		pa = self.policyFetch("PA")
 		aa = self.policyFetch("AA")
+		attributeCheck = False
+		permissionCheck = False
+		changeCheck = False
+		newPA = ""
+		#Check that the permission exists - working
+		permissionList = myPermissions.split(';')
+		for permissions in permissionList:
+			permComp = ("<" + permN + ">")
+			if permComp.strip() == permissions.strip():
+				permissionCheck = True
 		# Check that attribute is in ATTRS.
 		# Fix for our bug we found just substring off the last char in case it is a char -> ';'.
 		temp = attrs
@@ -397,38 +444,49 @@ class CommandLine:
 			typePrint = aType.strip()
 			namePrint = namePrint.strip('>')
 			typePrint = typePrint.strip('<')
-			if namePrint.strip() == attN.strip(): # left off here
+			# check that the attribute actually exists cycle through all attribute additions
+			if namePrint.strip() == attN.strip():
 				attributeCheck = True
-		# Check that entity is in ENTITIES.
-		entityCompare = ("<" + entN + ">")
-		entityList = str(entities).split(';')
-		for entries in entityList:
-			if entries.strip() == entityCompare.strip():
-				entityCheck = True
-		# add new attribute to entity if all checks out.
-		if attributeCheck == True and entityCheck == True:	
-			print("TRUE")
-		
-	# NOT DONE -
-	def removeAttributeFromPermission(self, permN, attN, attV):
-		entities = self.policyFetch("ENTITIES")
-		attrs = self.policyFetch("ATTRS")
-		myPermissions= self.policyFetch("PERMS")
-		pa = self.policyFetch("PA")
-		aa = self.policyFetch("AA")
-		permissionList = str(myPermissions).split(';')
-		permissionCompare = ("<" + perm + ">")
-		for permissions in permissionList:
-			if permissions.strip() == permissionCompare.strip():
-				check = False
-			elif permissions != '':
-				newPermissions += (permissions + ";")
-		if check == True:
-			newPermissions += (" <" + perm + ">")
-			r = open('policy.txt', 'w')
-			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(newPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
-			r.write(newFile)
-			r.close()
+			else:
+				attributeCheck = False
+			# add new attribute to entity if all checks out.
+			if attributeCheck == True and permissionCheck == True:	
+				parsedPA = pa.split("-")
+				for string in parsedPA:
+					file_parts = string.split(":")
+					attributesLine = file_parts[0].strip()
+					permissionName = file_parts[1].strip()					
+					# Check permission first
+					if permissionName.strip() == permN.strip():
+						permissionCheck = True	
+						attributes = attributesLine.split(";")
+						
+						for attribute in attributes:
+							attribute = attribute.strip()
+							attribute = attribute[1:len(attribute)-1]
+							attributeParts = attribute.split(",")		
+							name = attributeParts[0].strip()
+							value = attributeParts[1].strip()
+							attVCheck = ('"' + attV + '"')
+							if name.strip() == attN.strip() and (value.strip() == attV.strip() or value.strip() == attVCheck):
+								changeCheck = True
+							else:
+								newPA += ("<" + name + ", " + value + ">;")
+					else:
+						newPA += string
+					if permissionName.strip() == permN.strip():
+						newPA = newPA[0:len(newPA)-1]
+						newPA += (" : " + permissionName+ " - ")
+		if changeCheck == True:
+			try:	
+				r = open('policy.txt', 'w')
+				newFile = ("ATTRS = " + str(temp) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(newPA) + "\nENTITIES = " + str(entities) + "\nAA = " + str(aa))
+				r.write(newFile)
+				r.close()
+			except FileNotFoundError:
+				print("")
+		else:
+			print("")
 		
 	# DONE - Adds attributes to entites in AA. Checks to make sure entity exists and attribute value also exists.
 	def addAttributeToEntity(self, entN, attN, attV):
@@ -488,7 +546,6 @@ class CommandLine:
 		temp = aa
 		lastChar = aa[-1]
 		aa = aa[0:len(aa)-1]
-		print("AA test: " + aa)
 		aaList = str(aa).split(';')
 		for attA in aaList:
 			aaParts = attA.split(':')
@@ -500,9 +557,6 @@ class CommandLine:
 				newAA += (attA)
 			else:
 				newAA += (attA + ";")
-			print(attA.strip())
-			print(comp1.strip())
-			print(comp2.strip())
 		if removeCheck == True:		
 			r = open('policy.txt', 'w')
 			newFile = ("ATTRS = " + str(attrs) + "\nPERMS = " + str(myPermissions) + "\nPA = " + str(pa) + "\nENTITIES = " + str(entities) + "\nAA = " + str(newAA))
